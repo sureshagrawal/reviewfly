@@ -16,6 +16,7 @@ const LogLevel = z.enum(["trace", "debug", "info", "warn", "error", "fatal"]);
 const StorageBackend = z.enum(["local", "r2", "s3"]);
 const EmailBackend = z.enum(["console", "resend"]);
 const RateLimitBackend = z.enum(["memory", "upstash"]);
+const AIProvider = z.enum(["openai", "gemini", "mock"]);
 
 /** Treat empty strings as undefined for optional fields. */
 const optStr = z.preprocess((v) => (v === "" ? undefined : v), z.string().optional());
@@ -80,7 +81,8 @@ const envSchema = z.object({
   EMAIL_FROM: optEmail.default("noreply@reviewfly.app"),
 
   // AI
-  AI_PROVIDERS: z.string().default("gemini,openai"),
+  AI_PROVIDER: AIProvider.default("mock"),
+  AI_MODEL: z.string().default("gpt-4o-mini"),
   GEMINI_API_KEY: optStr,
   OPENAI_API_KEY: optStr,
   AI_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),

@@ -6,7 +6,8 @@ Updated at the end of every working session. Anti-hallucination rule: when memor
 
 ## Current Phase
 
-**Phase 0 — Bootstrap Foundation** (in progress)
+**Phase 1a — CVL (Core Value Loop) COMPLETE** as of 2026-06-01.
+Next: optionally Phase 1b (admin UI groundwork) or jump to MVP polish.
 
 ## Locked Decisions
 
@@ -97,3 +98,22 @@ None.
 | Date | Session goal | Outcome |
 |---|---|---|
 | 2026-06-01 | Phase 0 scaffold + verify | Done. 22 files, install + migrate + dev + health 200. Two small fixes mid-flight (Prisma shadowDB, env empty-string handling). |
+| 2026-06-01 | Phase 1a CVL: engine + reviewer flow | Done. 33 new files. Real OpenAI integration verified — two distinct reviews generated end-to-end for nsg-academy seed tenant. Lint/typecheck/tests all green (11/11). |
+
+## Phase 1a — CVL Deliverables
+
+- Schema: 5 new tables (`business_settings`, `business_tags`, `flow_steps`, `prompt_pools`, `review_events`)
+- Repositories: 6 (`businesses`, `business-settings`, `business-tags`, `flow-steps`, `prompt-pools`, `review-events`)
+- AI adapters: `openai`, `mock`, factory
+- Uniqueness engine: 6 files (seed, dimension-picker, alias-substitution, prompt-builder, fallback-selector, index)
+- Flow runner helpers: condition-evaluator, step-registry
+- API routes: `/api/v1/review/generate`, `/api/v1/review/event`, `/api/v1/flow/[slug]`
+- Reviewer pages: `/r/[slug]`, `/r/[slug]/post`
+- Reviewer components: `DynamicFlowRunner`, `ReviewPostPage`, 7 step components, session helper
+- Seed script: nsg-academy tenant with 3 courses, 3 staff, 3-step flow, 27 universal pool entries
+- Unit tests: dimension-picker (3), alias-substitution (2), condition-evaluator (5), smoke (1) = 11 total
+
+## Live demo
+
+- URL: `http://localhost:3000/r/nsg-academy`
+- Generate API verified: 2 sequential calls returned distinct AI-authored reviews via OpenAI gpt-4o-mini.

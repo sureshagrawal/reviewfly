@@ -114,3 +114,115 @@ model PlatformUser {
 
   @@map("platform_users")
 }
+
+// ===========================================================================
+// CVL (Phase 1a) tables
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// BusinessSettings — one row per business; tenant branding + integrations
+// ---------------------------------------------------------------------------
+model BusinessSettings {
+  businessId             String   @id @map("business_id") @db.Uuid
+  displayName            String   @map("display_name") @db.VarChar(200)
+  aliases                String[] @default([]) // up to 10 alternate brand names
+  logoUrl                String?  @map("logo_url") @db.VarChar(500)
+  brandColor             String   @default("#1a73e8") @map("brand_color") @db.VarChar(7)
+  posterTagline          String?  @map("poster_tagline") @db.VarChar(200)
+  googleReviewUrl        String?  @map("google_review_url") @db.VarChar(500)
+  whatsappNumber         String?  @map("whatsapp_number") @db.VarChar(20)
+  aiEnabled              Boolean  @default(true) @map("ai_enabled")
+  sentimentGateThreshold Float    @default(0.6) @map("sentiment_gate_threshold")
+  displayTimezone        String   @default("Asia/Kolkata") @map("display_timezone") @db.VarChar(50)
+  hardFallback           String   @default("Great experience! Highly recommended.") @map("hard_fallback")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("business_settings")
+}
+
+// ---------------------------------------------------------------------------
+// BusinessTags — per-tenant taxonomy with aliases + content hints
+// ---------------------------------------------------------------------------
+model BusinessTag {
+  id              String   @id @default(uuid()) @db.Uuid
+  businessId      String   @map("business_id") @db.Uuid
+  category        String   @db.VarChar(50) // courses | dishes | services | staff | etc.
+  name            String   @db.VarChar(200)
+  description     String?
+  tagType         String   @default("generic") @map("tag_type") @db.VarChar(50)
+  aliases         String[] @default([]) // alternate names AI may use
+  contentHints    String[] @default([]) @map("content_hints") // phrases AI may embed
+  metadataJson    Json     @default("{}") @map("metadata_json")
+  displayOrder    Int      @default(0) @map("display_order")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz()
+
+  @@index([businessId, category, isActive])
+  @@map("business_tags")
+}
+
+// ---------------------------------------------------------------------------
+// FlowSteps — per-tenant ordered list of reviewer steps
+// ---------------------------------------------------------------------------
+model FlowStep {
+  id              String   @id @default(uuid()) @db.Uuid
+  businessId      String   @map("business_id") @db.Uuid
+  stepOrder       Int      @map("step_order")
+  stepKey         String   @map("step_key") @db.VarChar(50)
+  stepType        String   @map("step_type") @db.VarChar(30) // single_choice | multi_choice | text_short | text_long | number | rating | info_panel
+  questionLabel   String   @map("question_label") @db.VarChar(500)
+  helperText      String?  @map("helper_text") @db.VarChar(500)
+  configJson      Json     @default("{}") @map("config_json") // step-specific config (max picks, max length, options source, etc.)
+  conditionJson   Json?    @map("condition_json") // skip-if logic
+  isRequired      Boolean  @default(true) @map("is_required")
+  injectIntoPrompt Boolean @default(true) @map("inject_into_prompt")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@unique([businessId, stepKey])
+  @@index([businessId, isActive, stepOrder])
+  @@map("flow_steps")
+}
+
+// ---------------------------------------------------------------------------
+// PromptPools — universal + per-tenant pools of uniqueness dimensions
+// businessId NULL = universal entry (visible to all tenants)
+// ---------------------------------------------------------------------------
+model PromptPool {
+  id                  String   @id @default(uuid()) @db.Uuid
+  businessId          String?  @map("business_id") @db.Uuid // NULL = universal
+  dimension           String   @db.VarChar(30) // opening | tone | language | emoji | structure | grammar | staff_mention | length
+  value               String
+  weight              Int      @default(10)
+  appliesToIndustry   String?  @map("applies_to_industry") @db.VarChar(50) // NULL = all industries
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([businessId, dimension, isActive])
+  @@index([dimension, isActive])
+  @@map("prompt_pools")
+}
+
+// ---------------------------------------------------------------------------
+// ReviewEvents — append-only event log per reviewer session
+// PII-safe: no name/email/phone; ip_hash only
+// ---------------------------------------------------------------------------
+model ReviewEvent {
+  id           BigInt   @id @default(autoincrement())
+  businessId   String   @map("business_id") @db.Uuid
+  sessionId    String   @map("session_id") @db.VarChar(40)
+  eventType    String   @map("event_type") @db.VarChar(50)
+  payloadJson  Json     @default("{}") @map("payload_json")
+  ipHash       String?  @map("ip_hash") @db.VarChar(64)
+  uaCategory   String?  @map("ua_category") @db.VarChar(20) // mobile | tablet | desktop
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([businessId, createdAt])
+  @@index([businessId, sessionId])
+  @@map("review_events")
+}
