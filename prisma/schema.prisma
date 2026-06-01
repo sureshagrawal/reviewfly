@@ -21,7 +21,7 @@ model Industry {
   description String?
   isActive    Boolean    @default(true) @map("is_active")
   createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+  updatedAt   DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
   businesses  Business[]
 
   @@map("industries")
@@ -40,7 +40,7 @@ model Plan {
   featuresJson     Json       @map("features_json")
   isActive         Boolean    @default(true) @map("is_active")
   createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt        DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+  updatedAt        DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
   businesses       Business[]
 
   @@map("plans")
@@ -62,7 +62,7 @@ model Business {
   razorpayCustomerId     String?  @map("razorpay_customer_id") @db.VarChar(100)
   razorpaySubscriptionId String?  @map("razorpay_subscription_id") @db.VarChar(100)
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  updatedAt              DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
   deletedAt              DateTime? @map("deleted_at") @db.Timestamptz()
 
   industry Industry      @relation(fields: [industryCode], references: [code])
@@ -87,7 +87,7 @@ model BusinessUser {
   emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz()
   lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz()
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz()
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
@@ -109,7 +109,7 @@ model PlatformUser {
   lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz()
   isActive        Boolean  @default(true) @map("is_active")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz()
 
   @@map("platform_users")
@@ -136,7 +136,7 @@ model BusinessSettings {
   displayTimezone        String   @default("Asia/Kolkata") @map("display_timezone") @db.VarChar(50)
   hardFallback           String   @default("Great experience! Highly recommended.") @map("hard_fallback")
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  updatedAt              DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@map("business_settings")
 }
@@ -157,7 +157,7 @@ model BusinessTag {
   displayOrder    Int      @default(0) @map("display_order")
   isActive        Boolean  @default(true) @map("is_active")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz()
 
   @@index([businessId, category, isActive])
@@ -181,7 +181,7 @@ model FlowStep {
   injectIntoPrompt Boolean @default(true) @map("inject_into_prompt")
   isActive        Boolean  @default(true) @map("is_active")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@unique([businessId, stepKey])
   @@index([businessId, isActive, stepOrder])
@@ -201,7 +201,7 @@ model PromptPool {
   appliesToIndustry   String?  @map("applies_to_industry") @db.VarChar(50) // NULL = all industries
   isActive            Boolean  @default(true) @map("is_active")
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@index([businessId, dimension, isActive])
   @@index([dimension, isActive])
@@ -225,4 +225,52 @@ model ReviewEvent {
   @@index([businessId, createdAt])
   @@index([businessId, sessionId])
   @@map("review_events")
+}
+
+// ===========================================================================
+// Phase 1b — Auth & Audit
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// RefreshTokens — rotating refresh-token chain with reuse detection
+// One row per issued refresh token. On refresh: mark old as used, create new.
+// On reuse of an already-used token: revoke the entire chain (familyId).
+// ---------------------------------------------------------------------------
+model RefreshToken {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid // business_users.id
+  familyId     String   @map("family_id") @db.Uuid // shared across the rotation chain
+  tokenHash    String   @unique @map("token_hash") @db.VarChar(128) // sha-256 of raw token
+  userAgent    String?  @map("user_agent") @db.VarChar(255)
+  ipHash       String?  @map("ip_hash") @db.VarChar(64)
+  usedAt       DateTime? @map("used_at") @db.Timestamptz()
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamptz()
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz()
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// AuditLogs — every mutating admin action recorded for forensics
+// ---------------------------------------------------------------------------
+model AuditLog {
+  id            BigInt   @id @default(autoincrement())
+  businessId    String?  @map("business_id") @db.Uuid // null for platform-level actions
+  actorUserId   String?  @map("actor_user_id") @db.Uuid
+  entityType    String   @map("entity_type") @db.VarChar(50)
+  entityId      String?  @map("entity_id") @db.VarChar(64)
+  action        String   @db.VarChar(50) // create | update | delete | login | logout | etc.
+  oldValueJson  Json?    @map("old_value_json")
+  newValueJson  Json?    @map("new_value_json")
+  ipHash        String?  @map("ip_hash") @db.VarChar(64)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([businessId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
 }

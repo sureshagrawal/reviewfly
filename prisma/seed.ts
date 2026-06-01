@@ -1,5 +1,6 @@
 /**
- * Seed script — one tenant (nsg-academy) with realistic CVL content.
+ * Seed script — one tenant (nsg-academy) with realistic CVL content
+ * + one admin user for Phase 1b admin UI testing.
  *
  * Idempotent: drops & re-creates tenant rows so repeated runs stay clean.
  * Universal prompt_pools are upserted by (dimension, value).
@@ -8,8 +9,12 @@
  */
 
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
+
+const ADMIN_EMAIL = "admin@nsg-academy.local";
+const ADMIN_PASSWORD = "ChangeMe123Now";
 
 const UNIVERSAL_POOLS: Array<{ dimension: string; value: string; weight?: number }> = [
   // openings
@@ -102,6 +107,10 @@ async function main() {
   // Clean previous tenant rows (cascade clears tags, settings, steps via FK)
   const existing = await prisma.business.findUnique({ where: { slug: SLUG } });
   if (existing) {
+    await prisma.refreshToken.deleteMany({
+      where: { userId: { in: (await prisma.businessUser.findMany({ where: { businessId: existing.id }, select: { id: true } })).map((u) => u.id) } },
+    });
+    await prisma.auditLog.deleteMany({ where: { businessId: existing.id } });
     await prisma.flowStep.deleteMany({ where: { businessId: existing.id } });
     await prisma.businessTag.deleteMany({ where: { businessId: existing.id } });
     await prisma.promptPool.deleteMany({ where: { businessId: existing.id } });
@@ -242,8 +251,26 @@ async function main() {
     });
   }
 
+  // Admin user for Phase 1b admin UI
+  await _seedAdmin(business.id);
+
   console.log("✓ Seed complete");
-  console.log(`  Visit: http://localhost:3000/r/${SLUG}`);
+  console.log(`  Visit:    http://localhost:3000/r/${SLUG}`);
+  console.log(`  Admin:    http://localhost:3000/admin/login`);
+  console.log(`  Email:    ${ADMIN_EMAIL}`);
+  console.log(`  Password: ${ADMIN_PASSWORD}`);
+}
+
+async function _seedAdmin(businessId: string) {
+  const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+  await prisma.businessUser.create({
+    data: {
+      businessId,
+      email: ADMIN_EMAIL,
+      passwordHash,
+      role: "owner",
+    },
+  });
 }
 
 main()

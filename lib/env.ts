@@ -54,6 +54,19 @@ const envSchema = z.object({
   JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(900),
   JWT_REFRESH_TTL_SECONDS: z.coerce.number().int().positive().default(604800),
   BCRYPT_COST: z.coerce.number().int().min(10).max(15).default(12),
+  ENABLE_REGISTER: z
+    .preprocess(
+      (v) => (typeof v === "string" ? v.toLowerCase() === "true" : Boolean(v)),
+      z.boolean(),
+    )
+    .default(false),
+  COOKIE_DOMAIN: optStr,
+  COOKIE_SECURE: z
+    .preprocess(
+      (v) => (typeof v === "string" ? v.toLowerCase() === "true" : Boolean(v)),
+      z.boolean(),
+    )
+    .default(false),
 
   // OAuth (optional)
   GOOGLE_OAUTH_CLIENT_ID: optStr,

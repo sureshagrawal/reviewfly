@@ -35,3 +35,32 @@ export async function findById(id: string): Promise<BusinessRow | null> {
   `;
   return rows[0] ?? null;
 }
+
+export async function create(input: {
+  slug: string;
+  name: string;
+  industryCode: string;
+  planTier?: string;
+}): Promise<string> {
+  const rows = await sql<Array<{ id: string }>>`
+    INSERT INTO businesses (
+      id, slug, name, industry_code, plan_tier, status
+    ) VALUES (
+      gen_random_uuid(),
+      ${input.slug},
+      ${input.name},
+      ${input.industryCode},
+      ${input.planTier ?? "trial"},
+      'trial'
+    )
+    RETURNING id
+  `;
+  return rows[0]!.id;
+}
+
+export async function existsBySlug(slug: string): Promise<boolean> {
+  const rows = await sql<Array<{ id: string }>>`
+    SELECT id FROM businesses WHERE slug = ${slug} LIMIT 1
+  `;
+  return rows.length > 0;
+}
