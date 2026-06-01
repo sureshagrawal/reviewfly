@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Input, TextArea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { adminFetch } from "./adminFetch";
 
 export type SettingsFormValues = {
   display_name: string;
@@ -34,7 +35,7 @@ export function SettingsForm({ initial }: { initial: SettingsFormValues }) {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch("/api/v1/admin/settings", {
+      const res = await adminFetch("/api/v1/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

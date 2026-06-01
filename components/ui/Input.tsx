@@ -4,13 +4,16 @@ import {
   type InputHTMLAttributes,
   type TextareaHTMLAttributes,
   forwardRef,
+  useId,
 } from "react";
 
 export const Input = forwardRef<
   HTMLInputElement,
   InputHTMLAttributes<HTMLInputElement> & { label?: string; hint?: string; error?: string }
 >(function Input({ label, hint, error, className, id, ...rest }, ref) {
-  const generatedId = id ?? `inp-${Math.random().toString(36).slice(2, 8)}`;
+  // useId is SSR-safe (same id on server and client) — no hydration mismatch.
+  const autoId = useId();
+  const generatedId = id ?? autoId;
   return (
     <div className="flex flex-col gap-xs">
       {label && (
@@ -37,7 +40,8 @@ export const TextArea = forwardRef<
   HTMLTextAreaElement,
   TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: string; hint?: string; error?: string }
 >(function TextArea({ label, hint, error, className, id, ...rest }, ref) {
-  const generatedId = id ?? `ta-${Math.random().toString(36).slice(2, 8)}`;
+  const autoId = useId();
+  const generatedId = id ?? autoId;
   return (
     <div className="flex flex-col gap-xs">
       {label && (

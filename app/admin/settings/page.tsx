@@ -12,7 +12,7 @@ export default async function SettingsPage() {
   if (!settings) redirect("/admin/dashboard");
 
   return (
-    <div className="p-lg max-w-2xl">
+    <div className="p-lg max-w-[42rem]">
       <header className="mb-lg">
         <h1 className="text-h1 text-neutral-900">Settings</h1>
         <p className="text-caption text-neutral-700">

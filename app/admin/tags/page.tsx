@@ -11,7 +11,7 @@ export default async function TagsPage() {
   const tags = await tagsRepo.listByBusiness(user.tenantId, { activeOnly: false });
 
   return (
-    <div className="p-lg max-w-3xl">
+    <div className="p-lg max-w-[48rem]">
       <header className="mb-lg">
         <h1 className="text-h1 text-neutral-900">Tags</h1>
         <p className="text-caption text-neutral-700">

@@ -8,10 +8,18 @@
  * Usage: pnpm seed
  */
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../lib/generated/prisma/client.js";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const connectionString =
+  process.env["DIRECT_DATABASE_URL"] ?? process.env["DATABASE_URL"];
+if (!connectionString) {
+  throw new Error("DATABASE_URL or DIRECT_DATABASE_URL must be set");
+}
+
+const adapter = new PrismaPg({ connectionString });
+const prisma = new PrismaClient({ adapter });
 
 const ADMIN_EMAIL = "admin@nsg-academy.local";
 const ADMIN_PASSWORD = "ChangeMe123Now";
@@ -108,7 +116,16 @@ async function main() {
   const existing = await prisma.business.findUnique({ where: { slug: SLUG } });
   if (existing) {
     await prisma.refreshToken.deleteMany({
-      where: { userId: { in: (await prisma.businessUser.findMany({ where: { businessId: existing.id }, select: { id: true } })).map((u) => u.id) } },
+      where: {
+        userId: {
+          in: (
+            await prisma.businessUser.findMany({
+              where: { businessId: existing.id },
+              select: { id: true },
+            })
+          ).map((u: { id: string }) => u.id),
+        },
+      },
     });
     await prisma.auditLog.deleteMany({ where: { businessId: existing.id } });
     await prisma.flowStep.deleteMany({ where: { businessId: existing.id } });

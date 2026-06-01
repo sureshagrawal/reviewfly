@@ -1,15 +1,13 @@
 // ReviewFly — Prisma schema (schema-only; runtime queries use `postgres` driver).
-// Phase 0 baseline: 5 core tables required for tenant + auth + plan modeling.
-// More tables added in CVL phase per SRS §8.
+// Prisma 7: datasource URL + migration config live in prisma.config.ts.
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
+  provider = "postgresql"
 }
 
 // ---------------------------------------------------------------------------

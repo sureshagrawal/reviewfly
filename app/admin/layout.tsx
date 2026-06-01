@@ -41,8 +41,9 @@ export default async function AdminLayout({
             </div>
             <nav className="flex-1 px-sm py-md flex flex-col gap-xs">
               <NavLink href="/admin/dashboard" label="Dashboard" />
-              <NavLink href="/admin/settings" label="Settings" />
+              <NavLink href="/admin/flow" label="Flow" />
               <NavLink href="/admin/tags" label="Tags" />
+              <NavLink href="/admin/settings" label="Settings" />
             </nav>
             <div className="px-md py-md border-t border-neutral-200">
               <p className="text-caption text-neutral-700 truncate">{user.role}</p>
@@ -52,8 +53,8 @@ export default async function AdminLayout({
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
       ) : (
-        <main className="min-h-screen flex items-center justify-center bg-neutral-50 p-md">
-          {children}
+        <main className="min-h-screen bg-neutral-50 flex items-start sm:items-center justify-center p-md">
+          <div className="w-full max-w-[28rem] shrink-0">{children}</div>
         </main>
       )}
     </ToastProvider>

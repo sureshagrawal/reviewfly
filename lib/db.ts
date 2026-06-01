@@ -14,7 +14,6 @@ import postgres from "postgres";
 import { env } from "@/lib/env";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __reviewfly_sql: ReturnType<typeof postgres> | undefined;
 }
 

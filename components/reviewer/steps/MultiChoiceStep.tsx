@@ -11,7 +11,8 @@ function resolveOptions(
     const cat = (config.category as string | undefined) ?? "";
     return tagsByCategory[cat] ?? [];
   }
-  const inline = (config.options as Array<{ name: string; description?: string }> | undefined) ?? [];
+  const inline =
+    (config.options as Array<{ name: string; description?: string | null }> | undefined) ?? [];
   return inline.map((o) => ({ name: o.name, description: o.description ?? null }));
 }
 
@@ -57,6 +58,11 @@ export function MultiChoiceStep(props: {
               {selected ? "✓ " : ""}
               {opt.name}
             </span>
+            {opt.description && (
+              <span className="block text-caption text-neutral-700 mt-xs">
+                {opt.description}
+              </span>
+            )}
           </button>
         );
       })}

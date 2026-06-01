@@ -11,22 +11,24 @@ export function ReviewPostPage(props: {
   whatsappNumber: string | null;
 }) {
   const router = useRouter();
-  const [text, setText] = useState("");
-  const [provider, setProvider] = useState("");
+  // Lazy initializer runs once on mount, before paint — no "setState in effect"
+  // anti-pattern. SSR returns null because window/sessionStorage is undefined.
+  const [initial] = useState<
+    { review: string; provider: string } | null
+  >(() => {
+    if (typeof window === "undefined") return null;
+    const stored = readGenerated();
+    return stored ? { review: stored.review, provider: stored.provider } : null;
+  });
+  const [text, setText] = useState(initial?.review ?? "");
+  const [provider] = useState(initial?.provider ?? "");
   const [rating, setRating] = useState(5);
-  const [hydrated, setHydrated] = useState(false);
   const [copied, setCopied] = useState(false);
+  const hydrated = initial !== null;
 
   useEffect(() => {
-    const stored = readGenerated();
-    if (!stored) {
-      router.replace(`/r/${props.slug}`);
-      return;
-    }
-    setText(stored.review);
-    setProvider(stored.provider);
-    setHydrated(true);
-  }, [props.slug, router]);
+    if (!hydrated) router.replace(`/r/${props.slug}`);
+  }, [hydrated, props.slug, router]);
 
   const logEvent = async (eventType: string, payload?: Record<string, unknown>) => {
     try {
@@ -83,7 +85,7 @@ export function ReviewPostPage(props: {
   // Negative path — sentiment gate (manual: rating < 5)
   if (rating < 5) {
     return (
-      <section className="p-md max-w-screen-sm mx-auto">
+      <section className="p-md max-w-[640px] mx-auto">
         <h1 className="text-h1 text-neutral-900">We hear you</h1>
         <p className="text-body text-neutral-700 mt-sm">
           Please share what went wrong. We&apos;d rather fix it directly than have you post publicly.
@@ -117,7 +119,7 @@ export function ReviewPostPage(props: {
   }
 
   return (
-    <section className="p-md max-w-screen-sm mx-auto">
+    <section className="p-md max-w-[640px] mx-auto">
       <h1 className="text-h1 text-neutral-900">Your review is ready</h1>
       <p className="text-body text-neutral-700 mt-sm">
         Edit if you want, then copy &amp; post to Google.

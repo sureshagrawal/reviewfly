@@ -6,8 +6,13 @@ Updated at the end of every working session. Anti-hallucination rule: when memor
 
 ## Current Phase
 
-**Phase 1c — Starter Pack on Tenant Creation COMPLETE** as of 2026-06-01.
-Next: optional Phase 1d (visual flow builder) or polish/MVP phase.
+**Phase 1d.5 — Universal flow capability COMPLETE** as of 2026-06-01.
+Tenant can now build any review-collection flow without code:
+- Token interpolation (`{step_key}` in label/helper/info body)
+- Inline option descriptions (`Name | Description` per line)
+- Configurable rating scale (3/5/10 stars)
+- Conditional show/hide via editor UI (no JSON required)
+Next: MVP polish (branding, favicon, mobile QA) or Phase 2 (SaaS conversion).
 
 ## Locked Decisions
 
@@ -101,6 +106,8 @@ None.
 | 2026-06-01 | Phase 1a CVL: engine + reviewer flow | Done. 33 new files. Real OpenAI integration verified — two distinct reviews generated end-to-end for nsg-academy seed tenant. Lint/typecheck/tests all green (11/11). |
 | 2026-06-01 | Phase 1b: auth + admin UI | Done. 32 new files. Custom JWT + rotating refresh + admin pages (login, dashboard, settings, tags). Verified login→me + settings GET/PUT + tags CRUD all 200. Tests 14/14. |
 | 2026-06-01 | Phase 1c: starter pack on register | Done. 4 new files. packs/academy/starter-pack.json + industry-pack-loader service. /auth/register now auto-applies pack so /r/<slug> works immediately. Tests 18/18. |
+| 2026-06-01 | Phase 1d: visual flow builder | Done. 10 new files. /admin/flow page with FlowBuilder + StepCard + StepEditor (slide-in panel) + MobilePreview. 4 new API endpoints (GET/POST/PUT/DELETE/reorder). Tests 24/24. |
+| 2026-06-01 | Phase 1d.5: universal flow capability | Done. lib/flow-runner/template.ts (token interpolation), inline option descriptions, rating scale config, condition builder UI. Same capability as polished competitor flows (e.g. review.nsgacademy.in) minus pure cosmetic icons. Tests 33/33. |
 
 ## Phase 1a — CVL Deliverables
 

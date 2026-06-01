@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { StepType } from "@/lib/constants/step-types";
 import { shouldShow } from "@/lib/flow-runner/condition-evaluator";
+import { interpolate } from "@/lib/flow-runner/template";
 import { getOrCreateSessionId, storeGenerated } from "./session";
 import { SingleChoiceStep } from "./steps/SingleChoiceStep";
 import { MultiChoiceStep } from "./steps/MultiChoiceStep";
@@ -141,9 +142,13 @@ export function DynamicFlowRunner(props: {
       </div>
 
       <section className="flex-1 px-md py-lg">
-        <h1 className="text-h1 text-neutral-900">{current.question_label}</h1>
+        <h1 className="text-h1 text-neutral-900">
+          {interpolate(current.question_label, responses)}
+        </h1>
         {current.helper_text && (
-          <p className="text-caption text-neutral-700 mt-sm">{current.helper_text}</p>
+          <p className="text-caption text-neutral-700 mt-sm">
+            {interpolate(current.helper_text, responses)}
+          </p>
         )}
         <div className="mt-lg">
           <StepRenderer
@@ -151,6 +156,7 @@ export function DynamicFlowRunner(props: {
             value={value}
             onChange={(v) => setResponse(current.step_key, v)}
             tagsByCategory={tagsByCategory}
+            responses={responses}
           />
         </div>
         {error && (
@@ -192,8 +198,9 @@ function StepRenderer(props: {
   value: ResponseValue | undefined;
   onChange: (v: ResponseValue) => void;
   tagsByCategory: Record<string, Array<{ name: string; description: string | null }>>;
+  responses: Record<string, ResponseValue>;
 }) {
-  const { step, value, onChange, tagsByCategory } = props;
+  const { step, value, onChange, tagsByCategory, responses } = props;
   switch (step.step_type) {
     case "single_choice":
       return (
@@ -234,15 +241,18 @@ function StepRenderer(props: {
           onChange={onChange}
         />
       );
-    case "rating":
+    case "rating": {
+      const max = Math.max(2, Math.min(10, (step.config_json.scale as number | undefined) ?? 5));
       return (
         <RatingStep
-          value={typeof value === "number" ? value : 5}
+          value={typeof value === "number" ? value : max}
           onChange={onChange}
+          max={max}
         />
       );
+    }
     case "info_panel":
-      return <InfoPanelStep config={step.config_json} />;
+      return <InfoPanelStep config={step.config_json} responses={responses} />;
     default:
       return null;
   }

@@ -11,7 +11,7 @@ export default function GlobalError({
     <html lang="en">
       <body>
         <main className="min-h-screen flex items-center justify-center p-md">
-          <div className="text-center max-w-md">
+          <div className="text-center max-w-[28rem]">
             <h1 className="text-h1 text-danger">Something went wrong</h1>
             <p className="text-body text-neutral-700 mt-md">
               An unexpected error occurred. Please try again.

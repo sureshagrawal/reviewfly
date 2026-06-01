@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Input, TextArea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { adminFetch } from "./adminFetch";
 
 export type TagItem = {
   id: string;
@@ -48,7 +49,7 @@ export function TagList({ initialTags }: { initialTags: TagItem[] }) {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch("/api/v1/admin/tags", {
+      const res = await adminFetch("/api/v1/admin/tags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -90,7 +91,7 @@ export function TagList({ initialTags }: { initialTags: TagItem[] }) {
   const deleteTag = async (id: string) => {
     const confirmed = window.confirm("Delete this tag?");
     if (!confirmed) return;
-    const res = await fetch(`/api/v1/admin/tags/${id}`, { method: "DELETE" });
+    const res = await adminFetch(`/api/v1/admin/tags/${id}`, { method: "DELETE" });
     const data = (await res.json()) as { error?: string };
     if (!res.ok) {
       toast.show(data.error ?? "delete failed", "error");
@@ -102,7 +103,7 @@ export function TagList({ initialTags }: { initialTags: TagItem[] }) {
 
   const toggleActive = async (tag: TagItem) => {
     const newActive = !tag.is_active;
-    const res = await fetch(`/api/v1/admin/tags/${tag.id}`, {
+    const res = await adminFetch(`/api/v1/admin/tags/${tag.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: newActive }),

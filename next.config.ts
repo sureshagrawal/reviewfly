@@ -17,6 +17,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Server-only Node deps not bundled into the RSC graph.
+  serverExternalPackages: ["postgres", "pino", "bcryptjs", "jose"],
   async headers() {
     return [
       {

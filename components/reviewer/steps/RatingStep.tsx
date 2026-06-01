@@ -3,10 +3,13 @@
 export function RatingStep(props: {
   value: number;
   onChange: (v: number) => void;
+  max?: number;
 }) {
+  const max = Math.max(2, Math.min(10, props.max ?? 5));
+  const stars = Array.from({ length: max }, (_, i) => i + 1);
   return (
-    <div className="flex justify-center gap-sm">
-      {[1, 2, 3, 4, 5].map((star) => (
+    <div className="flex justify-center gap-sm flex-wrap">
+      {stars.map((star) => (
         <button
           key={star}
           type="button"

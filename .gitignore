@@ -49,6 +49,7 @@ Thumbs.db
 
 # Prisma generated client
 prisma/generated/
+lib/generated/
 
 # Misc
 .cache/
