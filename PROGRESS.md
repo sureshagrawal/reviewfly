@@ -1,0 +1,99 @@
+# ReviewFly — Progress Tracker
+
+Updated at the end of every working session. Anti-hallucination rule: when memory and this file conflict, **this file wins**.
+
+---
+
+## Current Phase
+
+**Phase 0 — Bootstrap Foundation** (in progress)
+
+## Locked Decisions
+
+| Area | Decision | Source |
+|---|---|---|
+| Frontend | Next.js 15 + React 19 + TS strict | SRS §5 |
+| Database (local) | Native PostgreSQL | Playbook §8 |
+| Database (free prod) | Supabase Postgres | SRS §5 |
+| Database (paid/scale) | Managed Postgres on AWS/GCP/Azure | Playbook §8 |
+| ORM | Prisma (schema-only) + `postgres` driver (runtime) | SRS §5 |
+| Auth | Custom JWT (vendor-independent) | SRS §11 |
+| Storage | Cloudflare R2 (prod), local FS (dev) | SRS §5 |
+| Cache + rate-limit | Upstash Redis (prod), memory (dev) | SRS §5 |
+| Email | Resend (prod), console (dev) | SRS §5 |
+| Payments | Razorpay (Phase 4+) | SRS §5 |
+| AI | Gemini primary, OpenAI fallback | SRS §5 |
+| Logging | pino with PII redaction | SRS §5 |
+| Testing | Vitest unit + integration | SRS §5 |
+| UI tokens | Material 3 expressive-inspired | SRS §23.3 |
+| Hosting | Vercel | SRS §5 |
+| Package manager | pnpm | SRS §5 |
+
+## Phase 0 Checklist
+
+- [x] Folder structure scaffolded
+- [x] `.gitignore` (excludes master files + docs/ + env)
+- [x] `package.json` with deps
+- [x] `tsconfig.json` strict mode + path aliases
+- [x] `next.config.ts` with security headers
+- [x] `tailwind.config.ts` with design tokens
+- [x] `.eslintrc.json` baseline rules
+- [x] `.env.example` with all required vars
+- [x] `lib/env.ts` Zod fail-fast validator + production guard
+- [x] `lib/db.ts` postgres driver client
+- [x] `lib/logger.ts` pino with PII redaction
+- [x] 5 adapter interfaces (ai, storage, rate-limit, email, payments)
+- [x] `prisma/schema.prisma` with 5 base tables (Industry, Plan, Business, BusinessUser, PlatformUser)
+- [x] App skeleton: layout, page, error, not-found, loading
+- [x] `/api/v1/health` endpoint (GET + HEAD)
+- [x] `middleware.ts` subdomain resolution skeleton
+- [x] `README.md` clean-machine quick-start
+- [x] `PROGRESS.md` (this file)
+- [x] `docs/ADR/0001-tech-stack.md`
+- [x] `pnpm install` executed (456 packages)
+- [x] `dotenv-cli` added for Prisma env loading
+- [x] Local Postgres reviewfly database created
+- [x] First migration applied (20260601072441_init)
+- [x] `pnpm typecheck` green
+- [x] `pnpm lint` green
+- [x] `pnpm test` green (1 smoke test)
+- [x] `pnpm dev` boots cleanly
+- [x] Health endpoint returns 200 `{"status":"ok","db":"up"}`
+- [ ] Git first commit (awaiting human confirmation)
+
+## Phase 0 — Verified
+
+End-to-end smoke test passed on 2026-06-01:
+- DB connection works through `lib/db.ts` postgres driver
+- Env validator catches missing/invalid vars at startup
+- Next.js dev server serves health endpoint with status 200
+- Five base tables present in `reviewfly` Postgres database
+
+## Pending Decisions (deferred, not blocking)
+
+| Item | Owner | Deadline |
+|---|---|---|
+| Validation evidence (5 user conversations) | Suresh | Before CVL launch |
+| Competitor analysis | Suresh | Before MVP |
+| Cost model lock (AI cost per review) | Suresh | Before Phase 4 (billing) |
+| Analytics event taxonomy | Suresh | Before MVP |
+| Data ownership rules | Suresh | Before SaaS conversion |
+
+## Blockers
+
+None.
+
+## Next Session
+
+1. Decide on git init + first commit (master files + docs/ stay local per `.gitignore`).
+2. Begin Phase 1 — Core Value Loop (CVL):
+   - Migrations for `flow_steps`, `business_tags`, `business_settings`, `prompt_pools`, `prompt_templates`, `fallback_templates`, `review_events`, `ai_usage`, `audit_logs`.
+   - `<DynamicFlowRunner>` reviewer component with 7 step types.
+   - Uniqueness engine end-to-end: pools → dimension pick → prompt build → AI call → response.
+   - Seed three hypothetical academies with different flows.
+
+## Session Log
+
+| Date | Session goal | Outcome |
+|---|---|---|
+| 2026-06-01 | Phase 0 scaffold + verify | Done. 22 files, install + migrate + dev + health 200. Two small fixes mid-flight (Prisma shadowDB, env empty-string handling). |

@@ -1,0 +1,58 @@
+# Master playbook files (local only, not for git)
+01_AI_HUMAN_CONTRACT.md
+02_PROJECT_START_PLAYBOOK.md
+03_AI_VIBE_CODING_RISKS.md
+
+# Internal docs (local only, not for git)
+docs/
+
+# Environment files (NEVER commit secrets)
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+.env.*.local
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js build output
+.next/
+out/
+dist/
+
+# Production builds
+build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# IDE & editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Prisma generated client
+prisma/generated/
+
+# Misc
+.cache/
+.turbo/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts

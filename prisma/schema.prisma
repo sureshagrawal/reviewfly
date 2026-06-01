@@ -1,0 +1,116 @@
+// ReviewFly — Prisma schema (schema-only; runtime queries use `postgres` driver).
+// Phase 0 baseline: 5 core tables required for tenant + auth + plan modeling.
+// More tables added in CVL phase per SRS §8.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Industries — registry of vertical packs (academy, restaurant, salon, etc.)
+// ---------------------------------------------------------------------------
+model Industry {
+  code        String     @id @db.VarChar(50)
+  name        String     @db.VarChar(100)
+  description String?
+  isActive    Boolean    @default(true) @map("is_active")
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+  businesses  Business[]
+
+  @@map("industries")
+}
+
+// ---------------------------------------------------------------------------
+// Plans — subscription tiers (basic/pro/max)
+// ---------------------------------------------------------------------------
+model Plan {
+  tier             String     @id @db.VarChar(20)
+  name             String     @db.VarChar(100)
+  description      String?
+  priceInrMonthly  Int        @map("price_inr_monthly")
+  priceInrYearly   Int        @map("price_inr_yearly")
+  limitsJson       Json       @map("limits_json")
+  featuresJson     Json       @map("features_json")
+  isActive         Boolean    @default(true) @map("is_active")
+  createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+  businesses       Business[]
+
+  @@map("plans")
+}
+
+// ---------------------------------------------------------------------------
+// Businesses — multi-tenant root entity
+// ---------------------------------------------------------------------------
+model Business {
+  id                     String   @id @default(uuid()) @db.Uuid
+  slug                   String   @unique @db.VarChar(50)
+  name                   String   @db.VarChar(200)
+  industryCode           String   @map("industry_code") @db.VarChar(50)
+  subTemplate            String?  @map("sub_template") @db.VarChar(50)
+  planTier               String   @default("trial") @map("plan_tier") @db.VarChar(20)
+  status                 String   @default("trial") @db.VarChar(20) // trial | active | suspended | cancelled
+  trialEndsAt            DateTime? @map("trial_ends_at") @db.Timestamptz()
+  currentPeriodEnd       DateTime? @map("current_period_end") @db.Timestamptz()
+  razorpayCustomerId     String?  @map("razorpay_customer_id") @db.VarChar(100)
+  razorpaySubscriptionId String?  @map("razorpay_subscription_id") @db.VarChar(100)
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt              DateTime? @map("deleted_at") @db.Timestamptz()
+
+  industry Industry      @relation(fields: [industryCode], references: [code])
+  plan     Plan          @relation(fields: [planTier], references: [tier])
+  users    BusinessUser[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([planTier])
+  @@map("businesses")
+}
+
+// ---------------------------------------------------------------------------
+// BusinessUsers — tenant-scoped admin/owner users
+// ---------------------------------------------------------------------------
+model BusinessUser {
+  id              String   @id @default(uuid()) @db.Uuid
+  businessId      String   @map("business_id") @db.Uuid
+  email           String   @db.VarChar(255)
+  passwordHash    String   @map("password_hash") @db.VarChar(255)
+  role            String   @db.VarChar(20) // owner | admin | viewer
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz()
+  lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz()
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz()
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, email])
+  @@index([email])
+  @@map("business_users")
+}
+
+// ---------------------------------------------------------------------------
+// PlatformUsers — super-admins, separate from tenant users (owner-safety)
+// ---------------------------------------------------------------------------
+model PlatformUser {
+  id              String   @id @default(uuid()) @db.Uuid
+  email           String   @unique @db.VarChar(255)
+  passwordHash    String   @map("password_hash") @db.VarChar(255)
+  role            String   @db.VarChar(20) // platform_owner | super_admin | support | viewer
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz()
+  lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz()
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz()
+
+  @@map("platform_users")
+}
