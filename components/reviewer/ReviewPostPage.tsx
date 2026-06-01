@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Card } from "@/components/ui/Card";
+import { StarRow } from "@/components/ui/StarRow";
 import { readGenerated, clearGenerated, getOrCreateSessionId } from "./session";
 
 export function ReviewPostPage(props: {
@@ -85,88 +87,81 @@ export function ReviewPostPage(props: {
   // Negative path — sentiment gate (manual: rating < 5)
   if (rating < 5) {
     return (
-      <section className="p-md max-w-[640px] mx-auto">
-        <h1 className="text-h1 text-neutral-900">We hear you</h1>
-        <p className="text-body text-neutral-700 mt-sm">
-          Please share what went wrong. We&apos;d rather fix it directly than have you post publicly.
-        </p>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={6}
-          className="mt-md w-full px-md py-sm rounded-md border border-neutral-200 bg-neutral-0 text-body"
-        />
-        <div className="mt-lg flex flex-col gap-sm">
-          {props.whatsappNumber && (
+      <section className="p-md max-w-[640px] mx-auto w-full">
+        <Card>
+          <h1 className="text-h1 text-neutral-900">We hear you</h1>
+          <p className="text-body text-neutral-700 mt-sm">
+            Please share what went wrong. We&apos;d rather fix it directly than have you post publicly.
+          </p>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={6}
+            className="mt-md w-full px-md py-sm rounded-md border border-neutral-200 bg-neutral-0 text-body"
+          />
+          <div className="mt-lg flex flex-col gap-sm">
+            {props.whatsappNumber && (
+              <button
+                type="button"
+                onClick={openWhatsApp}
+                className="min-h-touch-lg w-full rounded-md bg-success text-neutral-0 font-medium"
+              >
+                Message us on WhatsApp
+              </button>
+            )}
             <button
               type="button"
-              onClick={openWhatsApp}
-              className="min-h-touch-lg w-full rounded-md bg-success text-neutral-0"
+              onClick={() => setRating(5)}
+              className="min-h-touch-lg w-full rounded-md border border-neutral-200 text-neutral-900"
             >
-              Message us on WhatsApp
+              Actually, I want to leave 5 stars
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setRating(5)}
-            className="min-h-touch-lg w-full rounded-md border border-neutral-200 text-neutral-900"
-          >
-            Actually, I want to leave 5 stars
-          </button>
-        </div>
+          </div>
+        </Card>
       </section>
     );
   }
 
   return (
-    <section className="p-md max-w-[640px] mx-auto">
-      <h1 className="text-h1 text-neutral-900">Your review is ready</h1>
-      <p className="text-body text-neutral-700 mt-sm">
-        Edit if you want, then copy &amp; post to Google.
-      </p>
+    <section className="p-md max-w-[640px] mx-auto w-full">
+      <Card>
+        <h1 className="text-h1 text-neutral-900 text-center">Your review is ready!</h1>
+        <p className="text-body text-neutral-700 mt-sm text-center">
+          Review the text below, then copy and post it on Google.
+        </p>
 
-      <div className="mt-md flex items-center gap-sm">
-        {[1, 2, 3, 4, 5].map((s) => (
+        <div className="mt-md">
+          <StarRow value={rating} max={5} size="lg" onChange={onRatingChange} />
+        </div>
+
+        <textarea
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            void logEvent("review_edited", { length: e.target.value.length });
+          }}
+          rows={7}
+          className="mt-md w-full px-md py-sm rounded-md border border-neutral-200 bg-neutral-0 text-body resize-y"
+        />
+        <p className="text-caption text-neutral-700 mt-xs text-center">
+          {text.length} chars · provider: {provider}
+        </p>
+
+        <div className="mt-lg flex flex-col gap-sm">
           <button
-            key={s}
             type="button"
-            aria-label={`${s} star`}
-            onClick={() => onRatingChange(s)}
-            className="text-3xl leading-none min-h-touch min-w-touch"
-            style={{ color: s <= rating ? "#f29900" : "#e8eaed" }}
+            onClick={copyAndOpenGoogle}
+            className="min-h-touch-lg w-full rounded-md bg-brand text-neutral-0 font-medium shadow-card-md"
           >
-            ★
+            {copied ? "Copied! Opening Google..." : "📋  Copy & Post Review"}
           </button>
-        ))}
-      </div>
-
-      <textarea
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value);
-          void logEvent("review_edited", { length: e.target.value.length });
-        }}
-        rows={6}
-        className="mt-md w-full px-md py-sm rounded-md border border-neutral-200 bg-neutral-0 text-body resize-y"
-      />
-      <p className="text-caption text-neutral-700 mt-xs">
-        {text.length} chars · provider: {provider}
-      </p>
-
-      <div className="mt-lg flex flex-col gap-sm">
-        <button
-          type="button"
-          onClick={copyAndOpenGoogle}
-          className="min-h-touch-lg w-full rounded-md bg-primary text-neutral-0"
-        >
-          {copied ? "Copied! Opening Google..." : "Copy & open Google"}
-        </button>
-        {props.googleReviewUrl ? null : (
-          <p className="text-caption text-warning text-center">
-            Google review URL not set yet — copy will still work
-          </p>
-        )}
-      </div>
+          {!props.googleReviewUrl && (
+            <p className="text-caption text-warning text-center">
+              Google review URL not set yet — copy will still work
+            </p>
+          )}
+        </div>
+      </Card>
     </section>
   );
 }

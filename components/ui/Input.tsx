@@ -24,7 +24,7 @@ export const Input = forwardRef<
       <input
         id={generatedId}
         ref={ref}
-        className={`min-h-touch px-md rounded-md border border-neutral-200 bg-neutral-0 text-body w-full focus:border-primary ${error ? "border-danger" : ""} ${className ?? ""}`}
+        className={`min-h-touch px-md rounded-md border border-neutral-200 bg-neutral-0 text-body w-full transition outline-none focus:border-primary focus:bg-primary-tint/30 ${error ? "border-danger" : ""} ${className ?? ""}`}
         {...rest}
       />
       {error ? (
@@ -52,7 +52,7 @@ export const TextArea = forwardRef<
       <textarea
         id={generatedId}
         ref={ref}
-        className={`px-md py-sm rounded-md border border-neutral-200 bg-neutral-0 text-body w-full focus:border-primary ${error ? "border-danger" : ""} ${className ?? ""}`}
+        className={`px-md py-sm rounded-md border border-neutral-200 bg-neutral-0 text-body w-full transition outline-none focus:border-primary focus:bg-primary-tint/30 ${error ? "border-danger" : ""} ${className ?? ""}`}
         rows={4}
         {...rest}
       />

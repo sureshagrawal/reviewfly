@@ -18,11 +18,22 @@ export type TagItem = {
   is_active: boolean;
 };
 
+type EditDraft = {
+  category: string;
+  name: string;
+  description: string;
+  aliasesText: string;
+  hintsText: string;
+};
+
 export function TagList({ initialTags }: { initialTags: TagItem[] }) {
   const router = useRouter();
   const toast = useToast();
   const [tags, setTags] = useState<TagItem[]>(initialTags);
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
 
   // New-tag form state
   const [category, setCategory] = useState("courses");
@@ -117,6 +128,68 @@ export function TagList({ initialTags }: { initialTags: TagItem[] }) {
     );
   };
 
+  const startEdit = (tag: TagItem) => {
+    setEditingId(tag.id);
+    setEditDraft({
+      category: tag.category,
+      name: tag.name,
+      description: tag.description ?? "",
+      aliasesText: tag.aliases.join("\n"),
+      hintsText: tag.content_hints.join("\n"),
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditDraft(null);
+  };
+
+  const saveEdit = async (id: string, e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editDraft) return;
+    setEditSaving(true);
+    try {
+      const payload = {
+        category: editDraft.category,
+        name: editDraft.name,
+        description: editDraft.description || null,
+        aliases: parseList(editDraft.aliasesText),
+        content_hints: parseList(editDraft.hintsText),
+      };
+      const res = await adminFetch(`/api/v1/admin/tags/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        toast.show(data.error ?? "update failed", "error");
+        return;
+      }
+      setTags((prev) =>
+        prev.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                category: payload.category,
+                name: payload.name,
+                description: payload.description,
+                aliases: payload.aliases,
+                content_hints: payload.content_hints,
+              }
+            : t,
+        ),
+      );
+      toast.show("tag updated", "success");
+      cancelEdit();
+      router.refresh();
+    } catch {
+      toast.show("network error", "error");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-md">
       {!adding && (
@@ -177,41 +250,98 @@ export function TagList({ initialTags }: { initialTags: TagItem[] }) {
         )}
         {tags.map((tag) => (
           <Card key={tag.id}>
-            <div className="flex items-start gap-md">
-              <div className="flex-1">
-                <p className="text-label text-neutral-700">{tag.category}</p>
-                <p className="text-h2 text-neutral-900">{tag.name}</p>
-                {tag.description && (
-                  <p className="text-caption text-neutral-700 mt-xs">{tag.description}</p>
-                )}
-                {tag.aliases.length > 0 && (
-                  <p className="text-caption text-neutral-700 mt-sm">
-                    Aliases: {tag.aliases.join(", ")}
-                  </p>
-                )}
-                {tag.content_hints.length > 0 && (
-                  <p className="text-caption text-neutral-700">
-                    Hints: {tag.content_hints.length}
-                  </p>
-                )}
+            {editingId === tag.id && editDraft ? (
+              <form onSubmit={(e) => void saveEdit(tag.id, e)} className="flex flex-col gap-md">
+                <Input
+                  label="Category"
+                  value={editDraft.category}
+                  onChange={(e) =>
+                    setEditDraft((d) => (d ? { ...d, category: e.target.value } : d))
+                  }
+                  required
+                />
+                <Input
+                  label="Name"
+                  value={editDraft.name}
+                  onChange={(e) =>
+                    setEditDraft((d) => (d ? { ...d, name: e.target.value } : d))
+                  }
+                  required
+                />
+                <TextArea
+                  label="Description (optional)"
+                  value={editDraft.description}
+                  onChange={(e) =>
+                    setEditDraft((d) => (d ? { ...d, description: e.target.value } : d))
+                  }
+                />
+                <TextArea
+                  label="Aliases (one per line)"
+                  value={editDraft.aliasesText}
+                  onChange={(e) =>
+                    setEditDraft((d) => (d ? { ...d, aliasesText: e.target.value } : d))
+                  }
+                  hint="Alternate names the AI may use"
+                />
+                <TextArea
+                  label="Content hints (one per line)"
+                  value={editDraft.hintsText}
+                  onChange={(e) =>
+                    setEditDraft((d) => (d ? { ...d, hintsText: e.target.value } : d))
+                  }
+                  hint="Phrases the AI may weave in"
+                />
+                <div className="flex gap-sm">
+                  <Button type="submit" loading={editSaving}>Save changes</Button>
+                  <Button type="button" variant="ghost" onClick={cancelEdit}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex items-start gap-md">
+                <div className="flex-1">
+                  <p className="text-label text-neutral-700">{tag.category}</p>
+                  <p className="text-h2 text-neutral-900">{tag.name}</p>
+                  {tag.description && (
+                    <p className="text-caption text-neutral-700 mt-xs">{tag.description}</p>
+                  )}
+                  {tag.aliases.length > 0 && (
+                    <p className="text-caption text-neutral-700 mt-sm">
+                      Aliases: {tag.aliases.join(", ")}
+                    </p>
+                  )}
+                  {tag.content_hints.length > 0 && (
+                    <p className="text-caption text-neutral-700">
+                      Hints: {tag.content_hints.length}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-xs">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => startEdit(tag)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => void toggleActive(tag)}
+                  >
+                    {tag.is_active ? "Disable" : "Enable"}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => void deleteTag(tag.id)}
+                  >
+                    Delete
+                  </Button>
+                </div>
               </div>
-              <div className="flex flex-col gap-xs">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => void toggleActive(tag)}
-                >
-                  {tag.is_active ? "Disable" : "Enable"}
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => void deleteTag(tag.id)}
-                >
-                  Delete
-                </Button>
-              </div>
-            </div>
+            )}
           </Card>
         ))}
       </div>

@@ -140,8 +140,8 @@ function PreviewStepBody(props: {
               key={s}
               type="button"
               onClick={() => onChange(s)}
+              data-star={s <= v ? "on" : "off"}
               className="text-4xl leading-none p-xs"
-              style={{ color: s <= v ? "#f29900" : "#e8eaed" }}
             >
               ★
             </button>

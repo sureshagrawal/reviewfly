@@ -1,5 +1,7 @@
 "use client";
 
+import { ChoiceCard } from "@/components/ui/ChoiceCard";
+
 type Option = { name: string; description: string | null };
 
 function resolveOptions(
@@ -16,6 +18,11 @@ function resolveOptions(
   return inline.map((o) => ({ name: o.name, description: o.description ?? null }));
 }
 
+function initial(s: string): string {
+  const t = s.trim();
+  return t.length > 0 ? (t[0] ?? "").toUpperCase() : "?";
+}
+
 export function MultiChoiceStep(props: {
   config: Record<string, unknown>;
   tagsByCategory: Record<string, Array<{ name: string; description: string | null }>>;
@@ -26,7 +33,6 @@ export function MultiChoiceStep(props: {
   const maxPicks = Math.max(1, (props.config.max_picks as number | undefined) ?? 5);
 
   const toggle = (name: string) => {
-    // Immutable update; functional updater style passed up to parent.
     if (props.value.includes(name)) {
       props.onChange(props.value.filter((x) => x !== name));
     } else if (props.value.length < maxPicks) {
@@ -41,29 +47,18 @@ export function MultiChoiceStep(props: {
       </p>
       {options.map((opt) => {
         const selected = props.value.includes(opt.name);
+        const capped = !selected && props.value.length >= maxPicks;
         return (
-          <button
+          <ChoiceCard
             key={opt.name}
-            type="button"
             role="checkbox"
-            aria-checked={selected}
+            title={opt.name}
+            description={opt.description}
+            icon={selected ? "✓" : initial(opt.name)}
+            selected={selected}
+            disabled={capped}
             onClick={() => toggle(opt.name)}
-            className={`min-h-touch-lg w-full text-left px-md py-sm rounded-md border transition ${
-              selected
-                ? "bg-primary-soft border-primary"
-                : "bg-neutral-0 border-neutral-200 hover:border-neutral-700"
-            }`}
-          >
-            <span className="text-body text-neutral-900">
-              {selected ? "✓ " : ""}
-              {opt.name}
-            </span>
-            {opt.description && (
-              <span className="block text-caption text-neutral-700 mt-xs">
-                {opt.description}
-              </span>
-            )}
-          </button>
+          />
         );
       })}
     </div>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { StepType } from "@/lib/constants/step-types";
 import { shouldShow } from "@/lib/flow-runner/condition-evaluator";
 import { interpolate } from "@/lib/flow-runner/template";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { getOrCreateSessionId, storeGenerated } from "./session";
 import { SingleChoiceStep } from "./steps/SingleChoiceStep";
 import { MultiChoiceStep } from "./steps/MultiChoiceStep";
@@ -34,9 +35,8 @@ export function DynamicFlowRunner(props: {
   slug: string;
   steps: FlowStepClient[];
   tagsByCategory: Record<string, Array<{ name: string; description: string | null }>>;
-  brandColor: string;
 }) {
-  const { businessId, slug, steps, tagsByCategory, brandColor } = props;
+  const { businessId, slug, steps, tagsByCategory } = props;
   const router = useRouter();
   const [responses, setResponses] = useState<Responses>({});
   const [cursor, setCursor] = useState(0);
@@ -131,14 +131,20 @@ export function DynamicFlowRunner(props: {
 
   return (
     <div className="flex-1 flex flex-col">
-      {/* progress dots */}
-      <div className="px-md pt-md flex gap-xs" aria-label={`Step ${cursor + 1} of ${total}`}>
-        {Array.from({ length: total }).map((_, i) => (
-          <span
-            key={i}
-            className={`h-1.5 flex-1 rounded-pill ${i <= cursor ? "bg-primary" : "bg-neutral-200"}`}
-          />
-        ))}
+      {/* Progress: "Step X of N" + step name + gradient bar (NSG parity) */}
+      <div className="px-md pt-md pb-sm bg-neutral-0/60">
+        <div className="flex items-center justify-between mb-xs">
+          <span className="text-caption text-neutral-700">
+            Step {cursor + 1} of {total}
+          </span>
+          <span className="text-caption text-neutral-900 font-medium truncate ml-md">
+            {interpolate(current.question_label, responses)}
+          </span>
+        </div>
+        <ProgressBar
+          value={(cursor + 1) / total}
+          ariaLabel={`Step ${cursor + 1} of ${total}`}
+        />
       </div>
 
       <section className="flex-1 px-md py-lg">
@@ -146,7 +152,7 @@ export function DynamicFlowRunner(props: {
           {interpolate(current.question_label, responses)}
         </h1>
         {current.helper_text && (
-          <p className="text-caption text-neutral-700 mt-sm">
+          <p className="text-body text-neutral-700 mt-sm">
             {interpolate(current.helper_text, responses)}
           </p>
         )}
@@ -166,7 +172,7 @@ export function DynamicFlowRunner(props: {
         )}
       </section>
 
-      <footer className="bg-neutral-0 border-t border-neutral-200 px-md py-md flex gap-sm sticky bottom-0">
+      <footer className="bg-neutral-0 border-t border-neutral-200 px-md py-md flex gap-sm sticky bottom-0 shadow-card-md">
         <button
           type="button"
           onClick={goBack}
@@ -179,8 +185,7 @@ export function DynamicFlowRunner(props: {
           type="button"
           onClick={goNext}
           disabled={submitting || !isRequiredFilled}
-          className="min-h-touch-lg flex-1 rounded-md text-neutral-0 disabled:opacity-50"
-          style={{ backgroundColor: brandColor }}
+          className="min-h-touch-lg flex-1 rounded-md bg-brand text-neutral-0 font-medium disabled:opacity-50 transition"
         >
           {submitting
             ? "Generating..."
