@@ -6,6 +6,7 @@ import * as businessesRepo from "@/lib/repositories/businesses";
 import * as businessSettingsRepo from "@/lib/repositories/business-settings";
 import * as usersRepo from "@/lib/repositories/business-users";
 import * as auditRepo from "@/lib/repositories/audit-logs";
+import { applyToTenant } from "@/lib/services/industry-pack-loader";
 import { signAccessToken } from "@/lib/auth/jwt";
 import { issueNewFamily } from "@/lib/auth/refresh-rotation";
 import {
@@ -75,6 +76,9 @@ export async function POST(req: NextRequest) {
       businessId,
       displayName: parsed.data.display_name,
     });
+    // Clone the industry starter pack: tags + flow_steps + settings overrides.
+    // Idempotent — skips if tenant already has flow_steps.
+    await applyToTenant(businessId, parsed.data.industry_code);
     const passwordHash = await hashPassword(parsed.data.password);
     const userId = await usersRepo.create({
       businessId,

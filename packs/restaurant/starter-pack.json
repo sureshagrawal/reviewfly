@@ -1,0 +1,32 @@
+{
+  "$schema": "starter-pack.v1",
+  "industry": "restaurant",
+  "name": "Restaurant starter pack (placeholder)",
+  "description": "Stub. Real content + bill OCR step shipped in Phase 7 per SRS.",
+  "settings_overrides": {
+    "poster_tagline": "Enjoyed your meal? Tell Google!"
+  },
+  "tags": [],
+  "flow_steps": [
+    {
+      "step_order": 0,
+      "step_key": "rating",
+      "step_type": "rating",
+      "question_label": "How was your meal?",
+      "helper_text": "Tap stars to rate",
+      "config_json": {},
+      "is_required": true,
+      "inject_into_prompt": true
+    },
+    {
+      "step_order": 1,
+      "step_key": "highlight",
+      "step_type": "text_long",
+      "question_label": "What did you enjoy most?",
+      "helper_text": "Optional",
+      "config_json": {},
+      "is_required": false,
+      "inject_into_prompt": true
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "starter-pack.v1",
+  "industry": "academy",
+  "name": "Academy starter pack",
+  "description": "Default flow + sample taxonomy for coaching/tutoring/training institutes.",
+  "settings_overrides": {
+    "poster_tagline": "Loved your class? Tell Google!",
+    "hard_fallback": "Great teaching and supportive faculty here. Highly recommended."
+  },
+  "tags": [
+    {
+      "category": "courses",
+      "name": "Sample Course A",
+      "description": "Replace with your actual course name",
+      "tag_type": "course",
+      "aliases": [],
+      "content_hints": [],
+      "display_order": 0
+    },
+    {
+      "category": "courses",
+      "name": "Sample Course B",
+      "description": "Replace with your actual course name",
+      "tag_type": "course",
+      "aliases": [],
+      "content_hints": [],
+      "display_order": 1
+    },
+    {
+      "category": "staff",
+      "name": "Sample Faculty",
+      "description": "Replace with your actual faculty member's display name",
+      "tag_type": "staff",
+      "aliases": [],
+      "content_hints": [],
+      "display_order": 0
+    }
+  ],
+  "flow_steps": [
+    {
+      "step_order": 0,
+      "step_key": "rating",
+      "step_type": "rating",
+      "question_label": "How was your experience?",
+      "helper_text": "Tap stars to rate",
+      "config_json": {},
+      "is_required": true,
+      "inject_into_prompt": true
+    },
+    {
+      "step_order": 1,
+      "step_key": "course",
+      "step_type": "multi_choice",
+      "question_label": "Which course did you attend?",
+      "helper_text": "Pick up to 2",
+      "config_json": {
+        "options_source": "business_tags",
+        "category": "courses",
+        "max_picks": 2
+      },
+      "is_required": true,
+      "inject_into_prompt": true
+    },
+    {
+      "step_order": 2,
+      "step_key": "highlight",
+      "step_type": "text_long",
+      "question_label": "What stood out for you?",
+      "helper_text": "Anything specific you'd like us to mention (optional)",
+      "config_json": {},
+      "is_required": false,
+      "inject_into_prompt": true
+    }
+  ]
+}

@@ -6,8 +6,8 @@ Updated at the end of every working session. Anti-hallucination rule: when memor
 
 ## Current Phase
 
-**Phase 1b — Admin Foundation COMPLETE** as of 2026-06-01.
-Next: optionally Phase 1c (flow builder UI) or proceed to MVP polish + branding.
+**Phase 1c — Starter Pack on Tenant Creation COMPLETE** as of 2026-06-01.
+Next: optional Phase 1d (visual flow builder) or polish/MVP phase.
 
 ## Locked Decisions
 
@@ -100,6 +100,7 @@ None.
 | 2026-06-01 | Phase 0 scaffold + verify | Done. 22 files, install + migrate + dev + health 200. Two small fixes mid-flight (Prisma shadowDB, env empty-string handling). |
 | 2026-06-01 | Phase 1a CVL: engine + reviewer flow | Done. 33 new files. Real OpenAI integration verified — two distinct reviews generated end-to-end for nsg-academy seed tenant. Lint/typecheck/tests all green (11/11). |
 | 2026-06-01 | Phase 1b: auth + admin UI | Done. 32 new files. Custom JWT + rotating refresh + admin pages (login, dashboard, settings, tags). Verified login→me + settings GET/PUT + tags CRUD all 200. Tests 14/14. |
+| 2026-06-01 | Phase 1c: starter pack on register | Done. 4 new files. packs/academy/starter-pack.json + industry-pack-loader service. /auth/register now auto-applies pack so /r/<slug> works immediately. Tests 18/18. |
 
 ## Phase 1a — CVL Deliverables
 
