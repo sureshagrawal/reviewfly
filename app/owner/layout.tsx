@@ -46,6 +46,8 @@ export default async function OwnerLayout({
             <nav className="flex-1 px-sm py-md flex flex-col gap-xs" aria-label="Owner primary">
               <OwnerNavLink href="/owner/dashboard" label="Dashboard" pathname={pathname} />
               <OwnerNavLink href="/owner/tenants" label="Tenants" pathname={pathname} />
+              <OwnerNavLink href="/owner/pools" label="Prompt pools" pathname={pathname} />
+              <OwnerNavLink href="/owner/audit-log" label="Audit log" pathname={pathname} />
             </nav>
             <div className="px-md py-md border-t border-neutral-200">
               <OwnerLogoutButton />
