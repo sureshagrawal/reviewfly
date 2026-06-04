@@ -22,6 +22,12 @@ export async function PUT(
       { status: 403 },
     );
   }
+  if (user.readOnly) {
+    return NextResponse.json(
+      { error: "read-only impersonation session", code: "READ_ONLY" },
+      { status: 403 },
+    );
+  }
   const { id } = await params;
 
   let payload: unknown;
@@ -103,6 +109,12 @@ export async function DELETE(
   if (user.role === "viewer") {
     return NextResponse.json(
       { error: "viewer role cannot edit flow", code: "FORBIDDEN" },
+      { status: 403 },
+    );
+  }
+  if (user.readOnly) {
+    return NextResponse.json(
+      { error: "read-only impersonation session", code: "READ_ONLY" },
       { status: 403 },
     );
   }

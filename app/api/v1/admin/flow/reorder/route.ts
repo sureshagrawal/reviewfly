@@ -19,6 +19,12 @@ export async function POST(req: NextRequest) {
       { status: 403 },
     );
   }
+  if (user.readOnly) {
+    return NextResponse.json(
+      { error: "read-only impersonation session", code: "READ_ONLY" },
+      { status: 403 },
+    );
+  }
 
   let payload: unknown;
   try {

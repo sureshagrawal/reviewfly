@@ -50,6 +50,7 @@ export default async function AdminLayout({
               <NavLink href="/admin/flow" label="Flow" pathname={pathname} />
               <NavLink href="/admin/tags" label="Tags" pathname={pathname} />
               <NavLink href="/admin/settings" label="Settings" pathname={pathname} />
+              <NavLink href="/admin/audit-log" label="Audit log" pathname={pathname} />
             </nav>
             <div className="px-md py-md border-t border-neutral-200">
               <p className="text-caption text-neutral-700 truncate">{user.role}</p>
