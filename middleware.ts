@@ -23,6 +23,7 @@ const PUBLIC_ADMIN_PATHS = new Set([
   "/admin/register",
   "/admin/forgot-password",
   "/admin/reset-password",
+  "/owner/login",
 ]);
 
 export function middleware(req: NextRequest) {
@@ -39,6 +40,15 @@ export function middleware(req: NextRequest) {
       const loginUrl = req.nextUrl.clone();
       loginUrl.pathname = "/admin/login";
       loginUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  if (pathname.startsWith("/owner") && !PUBLIC_ADMIN_PATHS.has(pathname)) {
+    const hasCookie = req.cookies.has(AUTH_COOKIE_ACCESS);
+    if (!hasCookie) {
+      const loginUrl = req.nextUrl.clone();
+      loginUrl.pathname = "/owner/login";
       return NextResponse.redirect(loginUrl);
     }
   }

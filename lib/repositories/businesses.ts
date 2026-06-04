@@ -14,6 +14,10 @@ export type BusinessRow = {
   status: string;
 };
 
+export type OwnerTenantRow = BusinessRow & {
+  created_at: Date;
+};
+
 export async function findBySlug(slug: string): Promise<BusinessRow | null> {
   const rows = await sql<BusinessRow[]>`
     SELECT id, slug, name, industry_code, plan_tier, status
@@ -63,4 +67,25 @@ export async function existsBySlug(slug: string): Promise<boolean> {
     SELECT id FROM businesses WHERE slug = ${slug} LIMIT 1
   `;
   return rows.length > 0;
+}
+
+export async function listForOwner(limit = 200): Promise<OwnerTenantRow[]> {
+  return sql<OwnerTenantRow[]>`
+    SELECT id, slug, name, industry_code, plan_tier, status, created_at
+    FROM businesses
+    WHERE deleted_at IS NULL
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `;
+}
+
+export async function updateStatus(
+  businessId: string,
+  status: "trial" | "active" | "suspended" | "cancelled",
+): Promise<void> {
+  await sql`
+    UPDATE businesses
+       SET status = ${status}, updated_at = NOW()
+     WHERE id = ${businessId} AND deleted_at IS NULL
+  `;
 }
