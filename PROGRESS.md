@@ -6,23 +6,26 @@ Updated at the end of every working session. Anti-hallucination rule: when memor
 
 ## Current Phase
 
-**Phase 1d.5 COMPLETE + UI design-system overhaul COMPLETE** as of 2026-06-01.
+**Phase 2 IN PROGRESS — auth completion + owner surface + impersonation + universal pool curation + platform audit log** as of 2026-06-04.
 
-Tenant can build any review-collection flow without code:
-- Token interpolation (`{step_key}` in label/helper/info body)
-- Inline option descriptions (`Name | Description` per line)
-- Configurable rating scale (3/5/10 stars)
-- Conditional show/hide via editor UI (no JSON required)
+Delivered this session (commits `7b7b0ba`, `fbaeb0f`, `6339d10`, `beda032`):
+- Phase 2 auth completion:
+  - Forgot/reset password endpoints + UI pages; hashed single-use tokens (30-min TTL); reset revokes all refresh tokens; new `password_reset_tokens` table + migration `20260604121000_phase2_auth_recovery_google`.
+  - Google Sign-In: `/api/v1/auth/google/start` + `/callback` with signed httpOnly state cookie, Google JWKS id_token verification, internal-only `next` redirect sanitization, surface-aware routing (`/owner/*` uses `platform_users`, `/admin/*` uses `business_users`).
+  - Account-security form for tenant admin (email + password self-update) with current-password verification, tenant-level email uniqueness, and refresh-token revocation on password change.
+  - Password policy minimum lowered from 12 → 8 chars (still requires upper, lower, digit); test updated.
+- Platform-owner surface (foundation for SRS Phase 5):
+  - JWT `scope` claim (`tenant` | `platform`) + optional `impersonated_by` / `read_only` claims; `getCurrentUser` rejects platform tokens; new `getCurrentPlatformUser` helper.
+  - `/owner/login` (password + Google), `/owner/dashboard`, `/owner/tenants`, `/owner/audit-log`, `/owner/pools` pages with dedicated sidebar layout + logout.
+  - Owner APIs: tenants list, suspend/restore (audit-logged), read-only impersonation with mandatory reason (10-min TTL; `tenant_impersonated` audit), universal prompt pools CRUD with vertical-leak guard (SRS §16.4), platform-wide audit log read.
+- Tenant impersonation safety: read-only flag blocks ALL tenant mutation routes (settings, profile, tags, flow steps, flow reorder) with `READ_ONLY` 403; admin shell shows banner.
+- Tenant audit log surface: `/api/v1/admin/audit-log` + `/admin/audit-log` page + sidebar link.
+- CI: tenant-scope SQL guard (`scripts/check-tenant-scope.mjs`) wired into new GitHub Actions workflow (`.github/workflows/ci.yml`) running lint → tenant-scope → typecheck → tests → build.
+- Bootstrap script: `scripts/bootstrap-owner-admin.ts` to seed an owner email across selected tenants + platform.
 
-UI now NSG-grade across reviewer + admin:
-- Design tokens (gradients, shadows, brand tints, star colors) in `app/globals.css`
-- Reusable primitives: `<StarRow>`, `<ChoiceCard>`, `<ProgressBar>`
-- Sticky branded header with avatar + tagline + gradient progress bar
-- Per-tenant theming via `--brand-color` CSS variable (no inline styles on individual elements)
-- Tag admin has inline Edit form (was missing)
-- Admin shell: sidebar with brand mark + active nav state
+Gates at session end: lint ✅, typecheck ✅, tests 33/33 ✅.
 
-**Next**: Phase 2 candidate work — MVP polish (logo upload, favicon, mobile QA across step types), OR begin SRS §13 SaaS Conversion (plans, billing, super-admin).
+**Next**: Phase 2 closeout (2-account IDOR integration suite, same-email multi-tenant deterministic resolution / tenant picker), then SRS Phase 4 (billing skeleton) or Phase 6 hardening (CSRF double-submit, refresh-reuse alerts, file-upload sniffing, Lighthouse targets).
 
 ## Locked Decisions
 
@@ -93,6 +96,7 @@ UI now NSG-grade across reviewer + admin:
 - [x] **Phase 1c** — Starter pack on register (`94761a4`)
 - [x] **Phase 1d** — Visual flow builder + Phase 1d.5 universal capability + stack upgrade (`0ae3592`)
 - [x] **UI overhaul** — NSG-grade design system + zero-inline-style rule (`71b3ced`)
+- [~] **Phase 2 (in progress)** — Auth completion + owner surface + impersonation + Phase 3 pool curation + Phase 5 platform audit log (`7b7b0ba`, `fbaeb0f`, `6339d10`, `beda032`)
 
 ## Pending Decisions (deferred, not blocking)
 
@@ -125,12 +129,12 @@ See `TECHNICAL_DEBT.md` for tracked workarounds. Top-of-mind risks:
 
 ## Next Session
 
-Suggested options (pick one before resuming):
+Resume options (pick one before starting):
 
-1. **MVP polish** — logo upload UI, favicon, mobile QA across all 7 step types, empty-state copy review, error-boundary verification on reviewer flow.
-2. **Phase 2 SaaS conversion** — plan model, super-admin dashboard, tenant impersonation (read-only), AI cost-per-tenant view.
-3. **Hardening prep** — wire Upstash Redis (closes TD-003), finalize `lib/env.ts` for production, add structured request IDs to pino, add audit-log read API.
-4. **Analytics taxonomy** — lock event_type vocabulary (closes TD-004), add CSV export for tenant admins.
+1. **Phase 2 closeout** — 2-account IDOR integration test suite across every admin/owner endpoint; same-email multi-tenant deterministic login resolution (tenant picker / subdomain-based).
+2. **Phase 4 billing skeleton** — plans/limits editor, Razorpay subscription create flow stub + webhook with HMAC + idempotency.
+3. **Phase 6 hardening** — CSRF double-submit cookie, refresh-token reuse alerts wired to Sentry, file-upload magic-byte sniffing, Lighthouse targets.
+4. **Analytics taxonomy (TD-004)** — lock `event_type` vocabulary, add CSV export.
 
 ## Session Log
 
@@ -144,6 +148,7 @@ Suggested options (pick one before resuming):
 | 2026-06-01 | Phase 1d.5: universal flow capability | Done. `lib/flow-runner/template.ts` (token interpolation), inline option descriptions, rating scale config, condition builder UI. Tests 33/33. |
 | 2026-06-01 | Stack upgrade (Next 16 / React 19.2 / Tailwind 4 / Prisma 7) | Done. Cold compile dropped from 22-26s (Next 15 + Webpack) to ~1.2s (Next 16 + Turbopack). Tailwind 4 `--spacing-*` token collision discovered (see ADR-0003); all `max-w-*` callsites switched to arbitrary values. Tests 33/33. |
 | 2026-06-01 | UI overhaul to NSG-grade | Done. Design tokens, `<StarRow>`/`<ChoiceCard>`/`<ProgressBar>` primitives, sticky branded reviewer header, gradient progress bar, per-tenant `--brand-color` CSS var, inline Tag edit form, admin sidebar polish. Zero visual inline styles. Tests 33/33. |
+| 2026-06-04 | Phase 2 auth completion + owner surface + impersonation + Phase 3 pools + Phase 5 platform audit log | Done. 4 commits (`7b7b0ba`, `fbaeb0f`, `6339d10`, `beda032`). Forgot/reset, Google Sign-In, account-security form, password policy min 8, JWT scope + impersonation claims, owner pages + APIs, read-only mutation guards across tenant routes, tenant + platform audit log read, universal pools CRUD with vertical-leak guard, CI workflow + tenant-scope SQL guard. Lint/typecheck/tests 33/33 green. |
 
 ## Quality Gate Status
 

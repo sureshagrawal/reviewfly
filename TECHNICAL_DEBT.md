@@ -76,3 +76,25 @@ Fields per playbook §Technical Debt Register:
 - **Deadline**: No fixed deadline. Re-evaluated each release.
 - **Owner**: Suresh.
 - **Status**: Accepted-permanent (per ADR-0003).
+
+## TD-007 — Password reset email delivery uses console adapter in dev
+
+- **Description**: `/api/v1/auth/forgot` calls `lib/services/auth-email.ts` which, when `EMAIL_BACKEND=console`, only logs the reset URL via pino. If `EMAIL_BACKEND=console` is ever set in production, a `warn` log is emitted and email is silently dropped — production users would not receive their reset link.
+- **Reason**: Resend integration is wired but provider keys/dispatch were not part of this session.
+- **Risk**: Medium. Misconfiguration risk on first paid deploy.
+- **Sunset trigger**: Before MVP launch / first real-user password reset.
+- **Deadline**: 2026-10-31.
+- **Owner**: Suresh.
+- **Status**: Open.
+- **Resolution sketch**: Add startup assertion that `EMAIL_BACKEND !== "console"` when `NODE_ENV="production"`, and verify Resend send path against a sandboxed inbox.
+
+## TD-008 — Audit-log pages have no pagination or filter UI
+
+- **Description**: `/admin/audit-log` and `/owner/audit-log` fetch the most recent N rows (100 / 200 respectively) directly from the DB. APIs accept `limit` and `entity_type` query params but the UI does not expose paging or filtering. SRS §10.5 mandates pagination caps (50/page) for tenant list endpoints.
+- **Reason**: Phase 2 closeout work; UI scoped to MVP visibility, not deep forensics.
+- **Risk**: Low–Medium. Workable for early scale; insufficient once `audit_logs` grows past a few thousand rows per tenant.
+- **Sunset trigger**: When any tenant or platform-wide `audit_logs` table exceeds 5k rows, OR before MVP launch — whichever is sooner.
+- **Deadline**: 2026-10-31.
+- **Owner**: Suresh.
+- **Status**: Open.
+- **Resolution sketch**: Add `?page=&page_size=` to audit-log routes (cap 50), wire pagination + entity-type filter dropdown on both pages.
