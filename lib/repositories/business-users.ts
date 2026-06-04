@@ -33,6 +33,21 @@ export async function findById(
   return rows[0] ?? null;
 }
 
+export async function findByEmailInBusiness(
+  businessId: string,
+  email: string,
+): Promise<BusinessUserRow | null> {
+  const rows = await sql<BusinessUserRow[]>`
+    SELECT id, business_id, email, password_hash, role
+    FROM business_users
+    WHERE business_id = ${businessId}
+      AND LOWER(email) = LOWER(${email})
+      AND deleted_at IS NULL
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
+
 export async function touchLogin(id: string): Promise<void> {
   await sql`UPDATE business_users SET last_login_at = NOW() WHERE id = ${id}`;
 }
@@ -56,4 +71,26 @@ export async function create(input: {
     RETURNING id
   `;
   return rows[0]!.id;
+}
+
+export async function updatePassword(
+  userId: string,
+  passwordHash: string,
+): Promise<void> {
+  await sql`
+    UPDATE business_users
+       SET password_hash = ${passwordHash}, updated_at = NOW()
+     WHERE id = ${userId} AND deleted_at IS NULL
+  `;
+}
+
+export async function updateEmail(
+  userId: string,
+  email: string,
+): Promise<void> {
+  await sql`
+    UPDATE business_users
+       SET email = ${email.toLowerCase()}, updated_at = NOW()
+     WHERE id = ${userId} AND deleted_at IS NULL
+  `;
 }

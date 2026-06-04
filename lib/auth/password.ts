@@ -29,7 +29,7 @@ export async function verifyPassword(
 
 /** Minimum password policy. */
 export function validatePasswordStrength(p: string): string | null {
-  if (p.length < 12) return "password must be at least 12 characters";
+  if (p.length < 8) return "password must be at least 8 characters";
   if (!/[a-z]/.test(p)) return "password must contain a lowercase letter";
   if (!/[A-Z]/.test(p)) return "password must contain an uppercase letter";
   if (!/[0-9]/.test(p)) return "password must contain a digit";

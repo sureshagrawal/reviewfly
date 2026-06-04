@@ -81,7 +81,7 @@ export function RegisterForm() {
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          hint="Min 12 chars, with upper, lower, and a digit"
+          hint="Min 8 chars, with upper, lower, and a digit"
           required
         />
         <Button type="submit" size="lg" loading={submitting} className="w-full">

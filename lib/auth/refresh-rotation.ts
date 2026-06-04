@@ -129,3 +129,11 @@ export async function revokeFamily(familyId: string): Promise<void> {
      WHERE family_id = ${familyId} AND revoked_at IS NULL
   `;
 }
+
+export async function revokeAllByUserId(userId: string): Promise<void> {
+  await sql`
+    UPDATE refresh_tokens
+       SET revoked_at = NOW()
+     WHERE user_id = ${userId} AND revoked_at IS NULL
+  `;
+}

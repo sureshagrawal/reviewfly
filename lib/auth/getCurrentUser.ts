@@ -5,6 +5,8 @@ export type CurrentUser = {
   userId: string;
   tenantId: string;
   role: string;
+  impersonatedBy?: string;
+  readOnly?: boolean;
 };
 
 /**
@@ -16,10 +18,13 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   if (!token) return null;
   const claims = await verifyAccessToken(token);
   if (!claims) return null;
+  if (claims.scope === "platform") return null;
   return {
     userId: claims.sub,
     tenantId: claims.tenant,
     role: claims.role,
+    impersonatedBy: claims.impersonated_by,
+    readOnly: claims.read_only,
   };
 }
 

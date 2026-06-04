@@ -91,6 +91,7 @@ export async function POST(req: NextRequest) {
       userId,
       tenantId: businessId,
       role: parsed.data.role,
+      scope: "tenant",
     });
     const ipHash = req.headers
       .get("x-forwarded-for")

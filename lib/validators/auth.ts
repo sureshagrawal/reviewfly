@@ -8,7 +8,7 @@ export const LoginSchema = z.object({
 
 export const RegisterSchema = z.object({
   email: z.string().email().max(255),
-  password: z.string().min(12).max(200),
+  password: z.string().min(8).max(200),
   slug: z
     .string()
     .min(2)

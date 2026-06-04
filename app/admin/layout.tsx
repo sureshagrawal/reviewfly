@@ -56,7 +56,14 @@ export default async function AdminLayout({
               <LogoutButton />
             </div>
           </aside>
-          <main className="flex-1 overflow-auto">{children}</main>
+          <main className="flex-1 overflow-auto">
+            {user.readOnly ? (
+              <div className="bg-warning/10 text-warning border-b border-warning/30 px-md py-sm text-caption">
+                Read-only impersonation session • {user.impersonatedBy ? `by ${user.impersonatedBy}` : ""}
+              </div>
+            ) : null}
+            {children}
+          </main>
         </div>
       ) : (
         <main className="min-h-screen bg-gradient-page flex items-start sm:items-center justify-center p-md">

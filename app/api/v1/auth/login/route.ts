@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       tenantId: user.business_id,
       role: user.role,
+      scope: "tenant",
     });
     const ipHash = req.headers
       .get("x-forwarded-for")

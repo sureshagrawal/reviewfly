@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import * as usersRepo from "@/lib/repositories/business-users";
+import * as platformUsersRepo from "@/lib/repositories/platform-users";
 import { signAccessToken } from "@/lib/auth/jwt";
 import { rotate } from "@/lib/auth/refresh-rotation";
 import {
@@ -38,19 +39,32 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const user = await usersRepo.findById(result.userId);
-  if (!user) {
+  const [tenantUser, platformUser] = await Promise.all([
+    usersRepo.findById(result.userId),
+    platformUsersRepo.findById(result.userId),
+  ]);
+
+  if (!tenantUser && !platformUser) {
     await clearAuthCookies();
     return NextResponse.json(
       { error: "user no longer exists", code: "USER_GONE" },
       { status: 401 },
     );
   }
-  const access = await signAccessToken({
-    userId: user.id,
-    tenantId: user.business_id,
-    role: user.role,
-  });
+
+  const access = tenantUser
+    ? await signAccessToken({
+        userId: tenantUser.id,
+        tenantId: tenantUser.business_id,
+        role: tenantUser.role,
+        scope: "tenant",
+      })
+    : await signAccessToken({
+        userId: platformUser!.id,
+        tenantId: "platform",
+        role: platformUser!.role,
+        scope: "platform",
+      });
   await setAccessCookie(access);
   await setRefreshCookie(result.rawToken);
   return NextResponse.json({ ok: true });
